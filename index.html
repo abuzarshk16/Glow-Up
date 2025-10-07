@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glow Up | Beauty & Wellness</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Three.js for 3D animation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+
+        /* Custom Colors & Typography */
+        :root {
+            --color-primary: #FF69B4; /* Deep Pink - Hot Pink (Text, strong accents) */
+            --color-secondary: #F472B6; /* Tailwind pink-400 */
+            --color-accent: #F9A8D4; /* Tailwind pink-300 */
+            --color-bg: #FFFBFB; /* Off-white / Lightest Pink */
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-bg);
+            color: #1f2937; /* Dark text */
+            /* Removed: cursor: none; */
+        }
+
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* ---------------------------------- */
+        /* Glow and 3D Section Styles */
+        /* ---------------------------------- */
+        .card-glow {
+            box-shadow: 0 10px 25px -3px rgba(255, 105, 180, 0.2), 0 4px 6px -2px rgba(255, 105, 180, 0.05);
+            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border: 1px solid rgba(255, 105, 180, 0.3);
+        }
+
+        .card-glow:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 40px -5px rgba(255, 105, 180, 0.4), 0 6px 10px -3px rgba(255, 105, 180, 0.1);
+        }
+
+        .text-glow {
+            text-shadow: 0 0 5px var(--color-accent);
+        }
+
+        /* ENHANCED GLOW EFFECT FOR ALL BUTTONS */
+        .btn-glow {
+            transition: all 0.3s ease;
+            /* Stronger initial shadow */
+            box-shadow: 0 4px 20px -5px rgba(255, 105, 180, 0.4); 
+        }
+
+        .btn-glow:hover, .btn-glow:focus {
+            /* Much stronger hover glow and slight scale */
+            box-shadow: 0 12px 40px 0px rgba(255, 105, 180, 1); 
+            transform: translateY(-3px) scale(1.02); 
+            outline: none; /* Remove default focus outline */
+        }
+
+        /* ---------------------------------- */
+        /* Initial Slide-Up Animation */
+        /* ---------------------------------- */
+        #main-content {
+            opacity: 0;
+            transform: translateY(50px);
+            animation: slideUpFade 1s ease-out 0.5s forwards;
+        }
+
+        @keyframes slideUpFade {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* ---------------------------------- */
+        /* Modal Popup Styling */
+        /* ---------------------------------- */
+        .modal {
+            background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white overlay */
+            backdrop-filter: blur(8px);
+        }
+        .modal-content-glow {
+            border: 1px solid var(--color-primary);
+            box-shadow: 0 10px 40px rgba(255, 105, 180, 0.5), 0 0 30px rgba(255, 105, 180, 0.3) inset;
+        }
+
+        /* Three.js Container */
+        #threejs-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body class="bg-color-bg">
+
+    <!-- Removed: Custom Glowing Cursor HTML -->
+
+    <!-- Modal Popup for Product Detail -->
+    <div id="product-modal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="modal-content-glow bg-white p-8 rounded-xl max-w-lg w-full transform scale-95 transition-all duration-300">
+            <h3 id="modal-title" class="text-3xl font-bold mb-4 text-color-primary">Product Title</h3>
+            <p id="modal-description" class="text-gray-600 mb-6"></p>
+            <div class="flex justify-between items-center mb-6">
+                <span id="modal-price" class="text-2xl font-semibold text-gray-800"></span>
+                <span id="modal-tag" class="text-sm font-medium px-3 py-1 bg-color-accent text-white rounded-full">New</span>
+            </div>
+            <!-- Baby pink button for Add to Cart -->
+            <button onclick="closeModal()" class="w-full py-3 bg-pink-100 text-color-primary border border-color-primary font-bold rounded-lg btn-glow hover:bg-pink-200 transition duration-200">
+                Add to Cart
+            </button>
+        </div>
+    </div>
+    
+    <!-- Main Content Wrapper with Slide-Up Animation -->
+    <div id="main-content" class="relative">
+
+        <!-- ---------------------------------- -->
+        <!-- 1. Header and Navigation -->
+        <!-- ---------------------------------- -->
+        <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md shadow-lg shadow-pink-100">
+            <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+                <div class="text-3xl font-extrabold text-color-primary tracking-widest text-glow">
+                    Glow Up
+                </div>
+                <!-- Updated navigation links to use text-gray-800 for better visibility -->
+                <nav class="hidden md:flex space-x-8 text-lg font-medium">
+                    <a href="#home" class="text-gray-800 hover:text-color-primary transition duration-200 hover:text-glow">Home</a>
+                    <a href="#services" class="text-gray-800 hover:text-color-primary transition duration-200 hover:text-glow">Services</a>
+                    <a href="#products" class="text-gray-800 hover:text-color-primary transition duration-200 hover:text-glow">Products</a>
+                    <a href="#philosophy" class="text-gray-800 hover:text-color-primary transition duration-200 hover:text-glow">Our Philosophy</a>
+                    <a href="#contact" class="text-gray-800 hover:text-color-primary transition duration-200 hover:text-glow">Contact</a>
+                </nav>
+                <button class="md:hidden text-color-primary" onclick="toggleMenu()">
+                    <span data-lucide="menu" class="w-7 h-7"></span>
+                </button>
+            </div>
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="md:hidden hidden bg-white shadow-xl">
+                <!-- Links here will close the menu via the smooth scroll listener -->
+                <a href="#home" class="block px-4 py-2 text-gray-700 hover:bg-pink-50">Home</a>
+                <a href="#services" class="block px-4 py-2 text-gray-700 hover:bg-pink-50">Services</a>
+                <a href="#products" class="block px-4 py-2 text-gray-700 hover:bg-pink-50">Products</a>
+                <a href="#philosophy" class="block px-4 py-2 text-gray-700 hover:bg-pink-50">Philosophy</a>
+                <a href="#contact" class="block px-4 py-2 text-gray-700 hover:bg-pink-50">Contact</a>
+            </div>
+        </header>
+
+
+        <!-- ---------------------------------- -->
+        <!-- 2. Hero Section (with 3D Animation) -->
+        <!-- ---------------------------------- -->
+        <section id="home" class="relative overflow-hidden pt-32 pb-40 min-h-screen flex items-center justify-center">
+            
+            <!-- Three.js 3D Background Container -->
+            <div id="threejs-container"></div>
+            
+            <div class="container mx-auto px-4 relative z-10 text-center">
+                <h1 class="text-6xl md:text-8xl font-black mb-4 leading-tight text-color-primary text-glow">
+                    Find Your Inner Radiance
+                </h1>
+                <p class="text-xl md:text-2xl text-gray-700 max-w-3xl mx-auto mb-10">
+                    Transform your routine with personalized beauty treatments and holistic wellness guidance.
+                </p>
+                <!-- Baby pink button for Explore Our Offerings -->
+                <a href="#services" class="inline-flex items-center justify-center px-10 py-4 border border-color-primary text-base font-medium rounded-full text-color-primary bg-pink-100 btn-glow hover:bg-pink-200 transition duration-300 transform hover:scale-105">
+                    Explore Our Offerings
+                    <span data-lucide="sparkles" class="w-5 h-5 ml-2"></span>
+                </a>
+            </div>
+        </section>
+
+
+        <!-- ---------------------------------- -->
+        <!-- 3. Services/Pillars Section (Glow) -->
+        <!-- ---------------------------------- -->
+        <section id="services" class="py-24 bg-white">
+            <div class="container mx-auto px-4">
+                <h2 class="text-5xl font-bold text-center mb-6 text-color-primary text-glow">Our Pillars of Glow</h2>
+                <p class="text-center text-xl text-gray-600 mb-16 max-w-4xl mx-auto">
+                    A holistic approach to well-being that nurtures the mind, body, and spirit.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+                    <!-- Pillar 1 -->
+                    <div class="p-8 rounded-2xl bg-white card-glow text-center">
+                        <span data-lucide="heart-pulse" class="w-12 h-12 text-color-primary mx-auto mb-4"></span>
+                        <h3 class="text-2xl font-semibold mb-3">Mindful Movement</h3>
+                        <p class="text-gray-600">
+                            Custom yoga and meditation plans designed to reduce stress and boost mental clarity. Start your day grounded.
+                        </p>
+                    </div>
+
+                    <!-- Pillar 2 -->
+                    <div class="p-8 rounded-2xl bg-white card-glow text-center">
+                        <span data-lucide="droplets" class="w-12 h-12 text-color-primary mx-auto mb-4"></span>
+                        <h3 class="text-2xl font-semibold mb-3">Skin & Radiance</h3>
+                        <p class="text-gray-600">
+                            Dermatologist-approved routines and non-invasive treatments to achieve a lasting, natural glow.
+                        </p>
+                    </div>
+
+                    <!-- Pillar 3 -->
+                    <div class="p-8 rounded-2xl bg-white card-glow text-center">
+                        <span data-lucide="nut" class="w-12 h-12 text-color-primary mx-auto mb-4"></span>
+                        <h3 class="text-2xl font-semibold mb-3">Nourishment Strategy</h3>
+                        <p class="text-gray-600">
+                            Tailored nutritional guidance focusing on gut health, energy levels, and balanced, beautiful eating.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ---------------------------------- -->
+        <!-- 4. Product Showcase (Click to Popup) -->
+        <!-- ---------------------------------- -->
+        <section id="products" class="py-24 bg-color-bg">
+            <div class="container mx-auto px-4">
+                <h2 class="text-5xl font-bold text-center mb-6 text-color-primary text-glow">Signature Products</h2>
+                <p class="text-center text-xl text-gray-600 mb-16 max-w-4xl mx-auto">
+                    Experience our best-selling items, crafted with natural ingredients and designed for maximum efficacy.
+                </p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <!-- Product 1 -->
+                    <div class="p-5 rounded-xl bg-white card-glow cursor-pointer" onclick="openModal('Radiance Serum', 'An ultra-hydrating serum infused with Vitamin C and rose hip oil to brighten and even out skin tone. Apply morning and night for best results.', '$49.99', 'Best Seller')">
+                        <div class="h-40 bg-pink-50 rounded-lg mb-4 flex items-center justify-center">
+                            <span data-lucide="sun" class="w-16 h-16 text-color-secondary"></span>
+                        </div>
+                        <h4 class="text-xl font-semibold text-color-primary">Radiance Serum</h4>
+                        <p class="text-gray-500 mb-3">Vitamin C & Rose Hip</p>
+                        <p class="font-bold text-lg text-gray-800">$49.99</p>
+                    </div>
+
+                    <!-- Product 2 -->
+                    <div class="p-5 rounded-xl bg-white card-glow cursor-pointer" onclick="openModal('Calm Balm', 'A deeply soothing overnight mask with lavender and chamomile. Locks in moisture and aids in peaceful sleep.', '$34.50', 'New Arrival')">
+                        <div class="h-40 bg-pink-50 rounded-lg mb-4 flex items-center justify-center">
+                            <span data-lucide="moon" class="w-16 h-16 text-color-secondary"></span>
+                        </div>
+                        <h4 class="text-xl font-semibold text-color-primary">Calm Balm</h4>
+                        <p class="text-gray-500 mb-3">Overnight Repair Mask</p>
+                        <p class="font-bold text-lg text-gray-800">$34.50</p>
+                    </div>
+
+                    <!-- Product 3 -->
+                    <div class="p-5 rounded-xl bg-white card-glow cursor-pointer" onclick="openModal('Hydrate Spritz', 'Refreshing facial spray with mineral water and hyaluronic acid for instant hydration throughout the day. Perfect for travel.', '$22.00', 'Top Rated')">
+                        <div class="h-40 bg-pink-50 rounded-lg mb-4 flex items-center justify-center">
+                            <span data-lucide="cloud-drizzle" class="w-16 h-16 text-color-secondary"></span>
+                        </div>
+                        <h4 class="text-xl font-semibold text-color-primary">Hydrate Spritz</h4>
+                        <p class="text-gray-500 mb-3">Hyaluronic Acid Mist</p>
+                        <p class="font-bold text-lg text-gray-800">$22.00</p>
+                    </div>
+
+                    <!-- Product 4 -->
+                    <div class="p-5 rounded-xl bg-white card-glow cursor-pointer" onclick="openModal('Renewal Scrub', 'Gentle sugar scrub that exfoliates dead skin cells, revealing smooth, polished skin. Infused with natural vanilla.', '$29.95', 'Limited Stock')">
+                        <div class="h-40 bg-pink-50 rounded-lg mb-4 flex items-center justify-center">
+                            <span data-lucide="gem" class="w-16 h-16 text-color-secondary"></span>
+                        </div>
+                        <h4 class="text-xl font-semibold text-color-primary">Renewal Scrub</h4>
+                        <p class="text-gray-500 mb-3">Sugar Body Polish</p>
+                        <p class="font-bold text-lg text-gray-800">$29.95</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- ---------------------------------- -->
+        <!-- 5. Wellness Philosophy (LLM Integration for daily tip) -->
+        <!-- ---------------------------------- -->
+        <section id="philosophy" class="py-24 bg-pink-50">
+            <div class="container mx-auto px-4">
+                <h2 class="text-5xl font-bold text-center mb-6 text-color-primary text-glow">Our Philosophy: Wellness First</h2>
+                <p class="text-center text-xl text-gray-600 mb-10 max-w-4xl mx-auto">
+                    True beauty is a reflection of internal health. We guide you toward sustainable self-care habits.
+                </p>
+
+                <div class="max-w-3xl mx-auto p-8 bg-white rounded-2xl card-glow text-center">
+                    <h3 class="text-3xl font-semibold mb-4 text-gray-800">Your Daily Glow Tip</h3>
+                    <p class="text-gray-600 mb-6">Ask the Gemini AI to provide a personalized wellness insight.</p>
+                    
+                    <input type="text" id="tip-input" placeholder="e.g., 'A tip for better sleep'" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-color-primary focus:border-color-primary transition duration-200">
+                    
+                    <!-- Baby pink button for Generate Tip -->
+                    <button id="generate-tip-btn" class="w-full py-3 bg-pink-100 text-color-primary border border-color-primary font-bold rounded-lg btn-glow hover:bg-pink-200 transition duration-200 flex items-center justify-center">
+                        <!-- Updated loader color to match dark pink text -->
+                        <span id="tip-loader" class="hidden h-5 w-5 border-2 border-t-color-primary border-pink-300 rounded-full animate-spin mr-2"></span>
+                        Generate Tip
+                    </button>
+
+                    <div id="tip-output" class="mt-6 p-6 border-l-4 border-color-primary bg-pink-50 rounded-lg text-left hidden">
+                        <p class="font-medium text-gray-800"></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ---------------------------------- -->
+        <!-- 6. Testimonials (3D Card Effect) -->
+        <!-- ---------------------------------- -->
+        <section class="py-24 bg-white">
+            <div class="container mx-auto px-4">
+                <h2 class="text-5xl font-bold text-center mb-6 text-color-primary text-glow">Client Transformations</h2>
+                <p class="text-center text-xl text-gray-600 mb-16 max-w-4xl mx-auto">
+                    Hear from our community about their journey to lasting wellness and radiance.
+                </p>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Testimonial 1 -->
+                    <div class="p-6 rounded-xl bg-pink-50 card-glow hover:rotate-1">
+                        <p class="italic text-gray-700 mb-4">
+                            "Glow Up didn't just fix my skin; they changed my whole outlook. The nutritional advice was a game-changer for my energy levels. I feel like a completely new person!"
+                        </p>
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-color-accent rounded-full mr-3 flex items-center justify-center text-white font-bold text-xl">A</div>
+                            <div>
+                                <p class="font-semibold text-color-primary">Amelia K.</p>
+                                <p class="text-sm text-gray-500">Holistic Wellness Client</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Testimonial 2 -->
+                    <div class="p-6 rounded-xl bg-pink-50 card-glow hover:-rotate-1">
+                        <p class="italic text-gray-700 mb-4">
+                            "The Radiance Serum is my holy grail product. It genuinely gives me that glass-skin look. The checkout process was seamless, and the packaging was beautiful."
+                        </p>
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-color-accent rounded-full mr-3 flex items-center justify-center text-white font-bold text-xl">M</div>
+                            <div>
+                                <p class="font-semibold text-color-primary">Marcus L.</p>
+                                <p class="text-sm text-gray-500">Product Purchaser</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Testimonial 3 -->
+                    <div class="p-6 rounded-xl bg-pink-50 card-glow hover:rotate-2">
+                        <p class="italic text-gray-700 mb-4">
+                            "I love the mindful movement sessions. They're challenging but incredibly relaxing. I finally have a consistent routine that helps me manage my hectic work schedule."
+                        </p>
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-color-accent rounded-full mr-3 flex items-center justify-center text-white font-bold text-xl">S</div>
+                            <div>
+                                <p class="font-semibold text-color-primary">Sofia P.</p>
+                                <p class="text-sm text-gray-500">Movement Subscriber</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ---------------------------------- -->
+        <!-- 7. Contact/Booking -->
+        <!-- ---------------------------------- -->
+        <section id="contact" class="py-24 bg-color-bg">
+            <div class="container mx-auto px-4">
+                <div class="bg-white p-10 md:p-16 rounded-3xl max-w-5xl mx-auto card-glow">
+                    <h2 class="text-5xl font-bold text-center mb-4 text-color-primary text-glow">Book Your Consultation</h2>
+                    <p class="text-center text-xl text-gray-600 mb-10">
+                        Take the first step towards your glow up. We offer free 15-minute introductory calls.
+                    </p>
+
+                    <form action="#" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <input type="text" placeholder="Your Name" required class="p-4 border border-pink-200 rounded-lg focus:ring-color-primary focus:border-color-primary transition">
+                        <input type="email" placeholder="Your Email" required class="p-4 border border-pink-200 rounded-lg focus:ring-color-primary focus:border-color-primary transition">
+                        <input type="tel" placeholder="Phone Number (Optional)" class="p-4 border border-pink-200 rounded-lg focus:ring-color-primary focus:border-color-primary transition">
+                        <select required class="p-4 border border-pink-200 rounded-lg focus:ring-color-primary focus:border-color-primary transition bg-white">
+                            <option value="" disabled selected>Select Service of Interest</option>
+                            <option value="skin">Skin Radiance Treatment</option>
+                            <option value="nutrition">Nutritional Planning</option>
+                            <option value="movement">Mindful Movement Coaching</option>
+                            <option value="general">General Inquiry</option>
+                        </select>
+                        <textarea placeholder="Your Message or Specific Goals" rows="5" required class="md:col-span-2 p-4 border border-pink-200 rounded-lg focus:ring-color-primary focus:border-color-primary transition"></textarea>
+                        
+                        <!-- Baby pink button for Send Booking Request -->
+                        <button type="submit" class="md:col-span-2 py-4 mt-4 bg-pink-100 text-color-primary border border-color-primary font-extrabold rounded-xl btn-glow hover:bg-pink-200 transition duration-300 transform hover:scale-[1.01]">
+                            Send Booking Request
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- ---------------------------------- -->
+        <!-- 8. Footer -->
+        <!-- ---------------------------------- -->
+        <footer class="bg-color-primary text-white py-12">
+            <div class="container mx-auto px-4 text-center">
+                <div class="mb-4 text-2xl font-bold">Glow Up Wellness</div>
+                <div class="flex justify-center space-x-6 mb-8">
+                    <a href="#" class="text-white hover:text-pink-200 transition"><span data-lucide="instagram" class="w-6 h-6"></span></a>
+                    <a href="#" class="text-white hover:text-pink-200 transition"><span data-lucide="facebook" class="w-6 h-6"></span></a>
+                    <a href="#" class="text-white hover:text-pink-200 transition"><span data-lucide="twitter" class="w-6 h-6"></span></a>
+                </div>
+                <p class="text-sm">© 2025 Glow Up. All rights reserved. | Designed for Inner Radiance.</p>
+            </div>
+        </footer>
+
+    </div> <!-- End of Main Content Wrapper -->
+
+    <!-- Scroll to Top Button -->
+    <button id="scroll-to-top" class="fixed bottom-6 right-6 p-4 bg-pink-100 text-color-primary border border-color-primary rounded-full shadow-lg btn-glow z-50 transition-opacity duration-300 opacity-0 pointer-events-none hover:bg-pink-200" onclick="scrollToTop()">
+        <span data-lucide="chevron-up" class="w-6 h-6"></span>
+    </button>
+
+
+    <script>
+        // Global utility function for Lucide icons
+        lucide.createIcons();
+
+        /* =======================================================
+           1. Mobile Menu Toggle
+        ======================================================= */
+        function toggleMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        /* =======================================================
+           2. Modal Popup Logic
+        ======================================================= */
+        const modal = document.getElementById('product-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalDescription = document.getElementById('modal-description');
+        const modalPrice = document.getElementById('modal-price');
+        const modalTag = document.getElementById('modal-tag');
+
+        function openModal(title, description, price, tag) {
+            modalTitle.textContent = title;
+            modalDescription.textContent = description;
+            modalPrice.textContent = price;
+            modalTag.textContent = tag;
+            modal.classList.remove('hidden');
+            // Add scale animation class when showing
+            modal.querySelector('.modal-content-glow').classList.remove('scale-95');
+            modal.querySelector('.modal-content-glow').classList.add('scale-100');
+        }
+
+        function closeModal() {
+            // Add scale animation class when hiding
+            modal.querySelector('.modal-content-glow').classList.remove('scale-100');
+            modal.querySelector('.modal-content-glow').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300); // Wait for the transition to finish
+        }
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target.id === 'product-modal') {
+                closeModal();
+            }
+        });
+        
+        /* =======================================================
+           3. Three.js 3D Animation (Floating Glowing Orb)
+        ======================================================= */
+        let scene, camera, renderer, glowingOrb;
+
+        function initThreeJS() {
+            const container = document.getElementById('threejs-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            // Scene setup with soft background
+            scene = new THREE.Scene();
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
+            camera.position.z = 10; // Pull camera back slightly
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setPixelRatio(window.devicePixelRatio); // For better quality
+            renderer.setSize(width, height);
+            container.appendChild(renderer.domElement);
+            
+            // --- LIGHTING ---
+            // Soft Ambient light
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.2); 
+            scene.add(ambientLight);
+
+            // Main Pink Point Light (Glow source)
+            const pointLight = new THREE.PointLight(0xff69b4, 1.5, 50); // Hot Pink, strength 1.5, distance 50
+            pointLight.position.set(0, 0, 5);
+            scene.add(pointLight);
+
+            // --- GLOWING ORB ---
+            // Geometry (Large, simple sphere)
+            const geometry = new THREE.SphereGeometry(3, 32, 32); 
+
+            // Material (Subtly reflective and transparent)
+            const material = new THREE.MeshPhongMaterial({
+                color: 0xffffff,
+                specular: 0xffa0c0, // Light Pink Specular
+                shininess: 100,
+                transparent: true,
+                opacity: 0.6, // Semi-transparent
+            });
+
+            // Mesh
+            glowingOrb = new THREE.Mesh(geometry, material);
+            scene.add(glowingOrb);
+
+            // Handle Resize
+            window.addEventListener('resize', onWindowResize, false);
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('threejs-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        }
+
+        function animateThreeJS() {
+            requestAnimationFrame(animateThreeJS);
+
+            // Gentle Rotation
+            glowingOrb.rotation.x += 0.0005;
+            glowingOrb.rotation.y += 0.001;
+            
+            // Pulsing and Floating Movement
+            const time = Date.now() * 0.0005;
+            glowingOrb.position.y = Math.sin(time * 0.5) * 0.5; // Vertical float
+            glowingOrb.position.x = Math.cos(time * 0.5) * 0.5; // Horizontal float
+            
+            // Slight Scale Pulse (for glowing effect)
+            const pulseScale = 1 + Math.sin(time * 1.5) * 0.05;
+            glowingOrb.scale.set(pulseScale, pulseScale, pulseScale);
+
+
+            renderer.render(scene, camera);
+        }
+
+        // Only initialize Three.js if the container is present
+        if (document.getElementById('threejs-container')) {
+            initThreeJS();
+            animateThreeJS();
+        }
+        
+        /* =======================================================
+           4. Smooth Scroll Navigation
+        ======================================================= */
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                // Only apply smooth scroll for anchors pointing to sections within the page
+                const href = this.getAttribute('href');
+                if (href && href !== '#') {
+                    e.preventDefault();
+                    
+                    const targetElement = document.querySelector(href);
+
+                    if (targetElement) {
+                        // Close mobile menu first if it's open
+                        const mobileMenu = document.getElementById('mobile-menu');
+                        if (!mobileMenu.classList.contains('hidden')) {
+                            mobileMenu.classList.add('hidden');
+                        }
+
+                        // Scroll smoothly to the element
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start' // Scroll to the top of the section
+                        });
+                    }
+                }
+            });
+        });
+
+
+        /* =======================================================
+           5. LLM Integration (Daily Glow Tip)
+        ======================================================= */
+        const generateBtn = document.getElementById('generate-tip-btn');
+        const tipInput = document.getElementById('tip-input');
+        const tipOutput = document.getElementById('tip-output');
+        const tipLoader = document.getElementById('tip-loader');
+        
+        const apiKey = ""; // If you want to use models other than gemini-2.5-flash-preview-05-20 or imagen-3.0-generate-002, provide an API key here. Otherwise, leave this as-is.
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+        // Utility to implement exponential backoff
+        async function fetchWithBackoff(url, options, retries = 5, delay = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.ok) {
+                        return response;
+                    } else if (response.status === 429 && i < retries - 1) { // Too Many Requests
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2; // Exponential increase
+                    } else {
+                        throw new Error(`API request failed with status ${response.status}`);
+                    }
+                } catch (error) {
+                    if (i === retries - 1) throw error;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                }
+            }
+        }
+        
+        generateBtn.addEventListener('click', async () => {
+            const userQuery = tipInput.value.trim() || "A general wellness tip";
+            
+            const systemPrompt = "You are a friendly, encouraging wellness coach. Provide a single, concise, and actionable tip related to beauty, sleep, or nutrition based on the user's query. The tone should be positive and radiant. Do not include any external citations.";
+            const finalQuery = `Provide a wellness tip related to: ${userQuery}`;
+
+            // Show loading state
+            generateBtn.disabled = true;
+            generateBtn.classList.add('opacity-50');
+            tipLoader.classList.remove('hidden');
+            tipOutput.classList.add('hidden');
+
+            const payload = {
+                contents: [{ parts: [{ text: finalQuery }] }],
+                // Note: No search grounding needed for a motivational tip
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                },
+            };
+            
+            try {
+                const response = await fetchWithBackoff(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (text) {
+                    // Re-create the lucide icon for the new content
+                    tipOutput.querySelector('p').innerHTML = `<span data-lucide="sparkles" class="w-5 h-5 inline mr-2 text-color-primary"></span> ${text}`;
+                    lucide.createIcons(); 
+                    tipOutput.classList.remove('hidden');
+                } else {
+                    tipOutput.querySelector('p').textContent = "Sorry, I couldn't generate a tip right now. Please try a different query!";
+                    tipOutput.classList.remove('hidden');
+                }
+
+            } catch (error) {
+                console.error("Gemini API Error:", error);
+                tipOutput.querySelector('p').textContent = "An error occurred while connecting to the server. Please check your connection.";
+                tipOutput.classList.remove('hidden');
+            } finally {
+                // Reset loading state
+                generateBtn.disabled = false;
+                generateBtn.classList.remove('opacity-50');
+                tipLoader.classList.add('hidden');
+            }
+        });
+
+        /* =======================================================
+           6. Scroll to Top Button Logic
+        ======================================================= */
+        const scrollToTopButton = document.getElementById('scroll-to-top');
+
+        // Show/Hide button on scroll
+        window.onscroll = function() {
+            // Show button if scrolled down more than 200 pixels
+            if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
+                // Ensure lucide icon is created when the button becomes visible
+                lucide.createIcons(); 
+                scrollToTopButton.classList.remove('opacity-0', 'pointer-events-none');
+                scrollToTopButton.classList.add('opacity-100');
+            } else {
+                scrollToTopButton.classList.remove('opacity-100');
+                scrollToTopButton.classList.add('opacity-0', 'pointer-events-none');
+            }
+        };
+
+        // Smooth scroll function (accessible globally via onclick in HTML)
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+    </script>
+</body>
+</html>
